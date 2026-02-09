@@ -54,14 +54,21 @@ addEventListener('keydown', event => pressed.add(event.code));
 addEventListener('keyup', event => pressed.delete(event.code));
 
 const dt = 1 / 60;
+let jump = false;
 setInterval(() => {
     const playerDir = +pressed.has('KeyD') - +pressed.has('KeyA');
-    player.applyImpulse(new Vector2(playerDir, 0));
-    player.velocity.x = Math.min(Math.max(player.velocity.x, -3), 3);
-
-    if (pressed.has('KeyW') && player.onGround) {
-        player.applyImpulse(new Vector2(0, 10));
+    if (player.onGround) {
+        player.applyImpulse(new Vector2(playerDir, 0));
+        if (pressed.has('KeyW') && !jump) {
+            player.applyImpulse(new Vector2(0, 10));
+            jump = true;
+        }
     }
+    else {
+        player.applyImpulse(new Vector2(playerDir / 5, 0));
+        jump = false;
+    }
+    player.velocity.x = Math.min(Math.max(player.velocity.x, -3), 3);
     world.step(dt);
 }, dt * 1000);
 

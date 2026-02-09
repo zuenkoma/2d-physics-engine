@@ -73,7 +73,7 @@ export default class World {
 
                         manifolds.push({
                             collider1, collider2,
-                            contacts: points.map(([point, penetrarion]) => {
+                            contacts: points.map(([point, penetration]) => {
                                 let normalImpulse = 0;
                                 let tangentImpulse = 0;
                                 if (cachedManifold) {
@@ -89,7 +89,7 @@ export default class World {
                                 }
                                 return {
                                     point,
-                                    bias: 0.5 / dt * penetrarion,
+                                    bias: 0.5 / dt * Math.max(0, penetration - 0.01),
                                     normalMass: Entity.getEffectiveMass(entity1, entity2, point, normal),
                                     tangentMass: Entity.getEffectiveMass(entity1, entity2, point, normal.clone().perp()),
                                     normalImpulse, tangentImpulse
