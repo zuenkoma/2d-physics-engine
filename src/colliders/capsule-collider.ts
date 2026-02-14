@@ -18,9 +18,9 @@ export default class CapsuleCollider extends Collider {
         const halfHeight = new Vector2(0, 1).rotate(this.rotation).mult(this.height / 2 - this.radius);
         const start = halfHeight.clone();
         const end = halfHeight.clone().mult(-1);
-        if (this.entity) {
-            start.rotate(this.entity.rotation).add(this.entity.position);
-            end.rotate(this.entity.rotation).add(this.entity.position);
+        if (this.body) {
+            start.rotate(this.body.rotation).add(this.body.position);
+            end.rotate(this.body.rotation).add(this.body.position);
         }
         return { start, end };
     }

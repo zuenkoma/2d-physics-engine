@@ -1,7 +1,7 @@
 import type Collider from './colliders/collider.ts';
 import Vector2 from './vector2.ts';
 
-export default class Entity {
+export default class Body {
     colliders: Collider[] = [];
 
     position: Vector2;
@@ -54,14 +54,14 @@ export default class Entity {
     }
 
     addCollider(collider: Collider) {
-        if (collider.entity) throw new Error('collider already associated with an entity');
+        if (collider.body) throw new Error('collider already associated with a body');
         this.colliders.push(collider);
-        collider.entity = this;
+        collider.body = this;
         this.calculateInertia();
     }
     removeCollider(collider: Collider) {
         this.colliders.splice(this.colliders.indexOf(collider), 1);
-        collider.entity = null;
+        collider.body = null;
         this.calculateInertia();
     }
 
@@ -77,14 +77,14 @@ export default class Entity {
         this.angularVelocity += torque * this.inverseInertia;
     }
 
-    static getEffectiveMass(entity1: Entity, entity2: Entity, contactPoint: Vector2, normal: Vector2) {
-        const lever1 = contactPoint.clone().sub(entity1.position).cross(normal);
-        const lever2 = contactPoint.clone().sub(entity2.position).cross(normal);
+    static getEffectiveMass(body1: Body, body2: Body, contactPoint: Vector2, normal: Vector2) {
+        const lever1 = contactPoint.clone().sub(body1.position).cross(normal);
+        const lever2 = contactPoint.clone().sub(body2.position).cross(normal);
         return 1 / (
-            entity1.inverseMass +
-            entity2.inverseMass +
-            entity1.inverseInertia * lever1 ** 2 +
-            entity2.inverseInertia * lever2 ** 2
+            body1.inverseMass +
+            body2.inverseMass +
+            body1.inverseInertia * lever1 ** 2 +
+            body2.inverseInertia * lever2 ** 2
         );
     }
 }

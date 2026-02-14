@@ -1,6 +1,6 @@
 import clipping from './clipping.ts';
 import type Collider from './colliders/collider.ts';
-import Entity from './entity.ts';
+import Body from './body.ts';
 import epa from './epa.ts';
 import gjk from './gjk.ts';
 import Vector2 from './vector2.ts';
@@ -23,34 +23,34 @@ interface ContactManifold {
 }
 
 export default class World {
-    entities: Entity[] = [];
+    bodies: Body[] = [];
     private manifoldCache: ContactManifold[] = [];
 
     gravity = new Vector2(0, -9.81);
 
-    addEntity(entity: Entity) {
-        if (this.entities.includes(entity)) return;
-        this.entities.push(entity);
+    addBody(body: Body) {
+        if (this.bodies.includes(body)) return;
+        this.bodies.push(body);
     }
-    removeEntity(entity: Entity) {
-        this.entities.splice(this.entities.indexOf(entity), 1);
+    removeBody(body: Body) {
+        this.bodies.splice(this.bodies.indexOf(body), 1);
     }
 
     step(dt: number, iterations = 15) {
-        for (const entity of this.entities) {
-            entity.onGround = false;
-            if (entity.isStatic()) continue;
-            entity.velocity.add(this.gravity.clone().mult(dt));
+        for (const body of this.bodies) {
+            body.onGround = false;
+            if (body.isStatic()) continue;
+            body.velocity.add(this.gravity.clone().mult(dt));
         }
 
         const manifolds: ContactManifold[] = [];
-        for (let i = 0; i < this.entities.length; ++i) {
-            const entity1 = this.entities[i];
-            for (let j = i + 1; j < this.entities.length; ++j) {
-                const entity2 = this.entities[j];
+        for (let i = 0; i < this.bodies.length; ++i) {
+            const body1 = this.bodies[i];
+            for (let j = i + 1; j < this.bodies.length; ++j) {
+                const body2 = this.bodies[j];
 
-                for (const collider1 of entity1.colliders) {
-                    for (const collider2 of entity2.colliders) {
+                for (const collider1 of body1.colliders) {
+                    for (const collider2 of body2.colliders) {
                         const simplex = gjk(collider1, collider2);
                         if (!simplex) continue;
 
@@ -66,9 +66,9 @@ export default class World {
                             manifold.contacts.length === points.length
                         );
 
-                        if (entity2.position.clone().sub(entity1.position).dot(entity2.velocity.clone().sub(entity1.velocity)) <= 0) {
-                            if (normal.y > 0.3) entity1.onGround = true;
-                            if (normal.y < -0.3) entity2.onGround = true;
+                        if (body2.position.clone().sub(body1.position).dot(body2.velocity.clone().sub(body1.velocity)) <= 0) {
+                            if (normal.y > 0.3) body1.onGround = true;
+                            if (normal.y < -0.3) body2.onGround = true;
                         }
 
                         manifolds.push({
@@ -90,13 +90,13 @@ export default class World {
                                 return {
                                     point,
                                     bias: 0.5 / dt * Math.max(0, penetration - 0.01),
-                                    normalMass: Entity.getEffectiveMass(entity1, entity2, point, normal),
-                                    tangentMass: Entity.getEffectiveMass(entity1, entity2, point, normal.clone().perp()),
+                                    normalMass: Body.getEffectiveMass(body1, body2, point, normal),
+                                    tangentMass: Body.getEffectiveMass(body1, body2, point, normal.clone().perp()),
                                     normalImpulse, tangentImpulse
                                 };
                             }),
                             normal,
-                            friction: Math.sqrt(entity1.friction * entity2.friction)
+                            friction: Math.sqrt(body1.friction * body2.friction)
                         });
                     }
                 }
@@ -106,12 +106,12 @@ export default class World {
 
         for (let i = 0; i < iterations; ++i) {
             for (const manifold of manifolds) {
-                const entity1 = manifold.collider1.entity!;
-                const entity2 = manifold.collider2.entity!;
+                const body1 = manifold.collider1.body!;
+                const body2 = manifold.collider2.body!;
 
                 for (const contact of manifold.contacts) {
-                    const velocity1 = entity1.getVelocityAtPoint(contact.point);
-                    const velocity2 = entity2.getVelocityAtPoint(contact.point);
+                    const velocity1 = body1.getVelocityAtPoint(contact.point);
+                    const velocity2 = body2.getVelocityAtPoint(contact.point);
                     const relativeVelocity = velocity1.clone().sub(velocity2);
 
                     const normalVelocity = relativeVelocity.dot(manifold.normal);
@@ -119,8 +119,8 @@ export default class World {
                     contact.normalImpulse = Math.max(0, oldNormalImpulse - (normalVelocity - contact.bias) * contact.normalMass);
 
                     const normalImpulse = manifold.normal.clone().mult(contact.normalImpulse - oldNormalImpulse);
-                    entity1.applyImpulse(normalImpulse, contact.point);
-                    entity2.applyImpulse(normalImpulse.clone().mult(-1), contact.point);
+                    body1.applyImpulse(normalImpulse, contact.point);
+                    body2.applyImpulse(normalImpulse.clone().mult(-1), contact.point);
 
                     const tangent = manifold.normal.clone().perp();
                     const tangentVelocity = relativeVelocity.dot(tangent);
@@ -129,15 +129,15 @@ export default class World {
                     const maxTangentImpulse = manifold.friction * contact.normalImpulse;
                     contact.tangentImpulse = Math.max(-maxTangentImpulse, Math.min(maxTangentImpulse, oldTangentImpulse - tangentVelocity * contact.tangentMass));
                     const tangentImpulse = tangent.clone().mult(contact.tangentImpulse - oldTangentImpulse);
-                    entity1.applyImpulse(tangentImpulse, contact.point);
-                    entity2.applyImpulse(tangentImpulse.clone().mult(-1), contact.point);
+                    body1.applyImpulse(tangentImpulse, contact.point);
+                    body2.applyImpulse(tangentImpulse.clone().mult(-1), contact.point);
                 }
             }
         }
 
-        for (const entity of this.entities) {
-            entity.position.add(entity.velocity.clone().mult(dt));
-            entity.rotation += entity.angularVelocity * dt;
+        for (const body of this.bodies) {
+            body.position.add(body.velocity.clone().mult(dt));
+            body.rotation += body.angularVelocity * dt;
         }
     }
 }

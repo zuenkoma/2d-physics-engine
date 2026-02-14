@@ -1,9 +1,9 @@
-import Vector2 from '../vector2.ts';
 import type AABB from '../aabb.ts';
-import type Entity from '../entity.ts';
+import type Body from '../body.ts';
+import Vector2 from '../vector2.ts';
 
 export default abstract class Collider {
-    entity: Entity | null = null;
+    body: Body | null = null;
     offset: Vector2;
 
     constructor(position = new Vector2(0, 0)) {
@@ -12,7 +12,7 @@ export default abstract class Collider {
 
     getCenter() {
         const center = this.offset.clone();
-        if (this.entity) center.rotate(this.entity.rotation).add(this.entity.position);
+        if (this.body) center.rotate(this.body.rotation).add(this.body.position);
         return center;
     }
 

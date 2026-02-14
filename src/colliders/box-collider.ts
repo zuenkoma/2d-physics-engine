@@ -22,7 +22,7 @@ export default class BoxCollider extends Collider {
         ];
         for (const vertex of vertices) {
             vertex.rotate(this.rotation).add(this.offset);
-            if (this.entity) vertex.rotate(this.entity.rotation).add(this.entity.position);
+            if (this.body) vertex.rotate(this.body.rotation).add(this.body.position);
         }
         return vertices;
     }
