@@ -65,17 +65,4 @@ export default class CapsuleCollider extends Collider {
         const hemisphereInertia = (2 / 5) * hemisphereMass * this.radius ** 2 + hemisphereMass * hemisphereDistance ** 2;
         return cylinderInertia + 2 * hemisphereInertia;
     }
-
-
-    renderShape(ctx: CanvasRenderingContext2D, fill = false) {
-        const { start, end } = this.getEndpoints();
-        const angle = Math.atan2(end.y - start.y, end.x - start.x);
-        const perpendicular = angle - Math.PI / 2;
-        ctx.beginPath();
-        ctx.arc(end.x, end.y, this.radius, perpendicular, perpendicular + Math.PI);
-        ctx.arc(start.x, start.y, this.radius, perpendicular + Math.PI, perpendicular + 2 * Math.PI);
-        ctx.closePath();
-        ctx.stroke();
-        if (fill) ctx.fill();
-    }
 }

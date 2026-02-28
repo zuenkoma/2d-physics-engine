@@ -1,4 +1,5 @@
 import { Body, BoxCollider, CapsuleCollider, CircleCollider, Vector2, World } from '../dist/index.js';
+import { renderBox, renderCapsule, renderCircle } from './render.js';
 
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
@@ -73,24 +74,44 @@ setInterval(() => {
 }, dt * 1000);
 
 
+const scale = 50;
 const offset = new Vector2(300, 200);
 function renderPoint(point, r = 5) {
     ctx.beginPath();
     ctx.arc(point.x + offset.x, point.y + offset.y, r, 0, 2 * Math.PI);
     ctx.stroke();
 }
+
+let mouse = null;
+addEventListener('mouseenter', event => {
+    mouse = new Vector2(event.pageX, event.pageY).sub(offset);
+    mouse.x /= scale;
+    mouse.y /= -scale;
+});
+addEventListener('mousemove', event => {
+    mouse = new Vector2(event.pageX, event.pageY).sub(offset);
+    mouse.x /= scale;
+    mouse.y /= -scale;
+});
+addEventListener('mouseleave', () => {
+    mouse = null;
+});
+
 function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     renderPoint(new Vector2(0, 0));
 
     ctx.save();
     ctx.translate(offset.x, offset.y);
-    ctx.scale(50, -50);
+    ctx.scale(scale, -scale);
     ctx.lineWidth = 0.02;
-    ctx.strokeStyle = 'black';
     for (const body of world.bodies) {
         for (const collider of body.colliders) {
-            collider.renderShape(ctx, false);
+            const over = mouse && collider.containsPoint(mouse.clone());
+            ctx.strokeStyle = over ? 'red' : 'black';
+            if (collider instanceof BoxCollider) renderBox(collider, ctx, false);
+            if (collider instanceof CapsuleCollider) renderCapsule(collider, ctx, false);
+            if (collider instanceof CircleCollider) renderCircle(collider, ctx, false);
         }
     }
     ctx.restore();

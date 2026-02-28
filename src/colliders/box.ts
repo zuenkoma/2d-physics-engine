@@ -73,16 +73,4 @@ export default class BoxCollider extends Collider {
     calculateInertia(mass: number) {
         return mass * this.size.lengthSquared() / 12;
     }
-
-    renderShape(ctx: CanvasRenderingContext2D, fill = false) {
-        const vertices = this.getVertices();
-        ctx.beginPath();
-        ctx.moveTo(vertices[0].x, vertices[0].y);
-        for (let i = 1; i < vertices.length; ++i) {
-            ctx.lineTo(vertices[i].x, vertices[i].y);
-        }
-        ctx.closePath();
-        ctx.stroke();
-        if (fill) ctx.fill();
-    }
 }

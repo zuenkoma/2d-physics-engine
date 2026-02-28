@@ -1,8 +1,9 @@
-import type AABB from '../aabb.ts';
+import AABB from "../aabb.js";
 import type Body from '../body.ts';
+import gjk from '../gjk.ts';
 import Vector2 from '../vector2.ts';
 
-export default abstract class Collider {
+export default class Collider {
     body: Body | null = null;
     offset: Vector2;
 
@@ -16,17 +17,31 @@ export default abstract class Collider {
         return center;
     }
 
-    abstract getAABB(): AABB;
-    abstract getFurthestPoint(direction: Vector2): Vector2;
-    abstract getClosestEdge(direction: Vector2): [Vector2, Vector2];
-    abstract calculateInertia(mass: number): number;
-    abstract renderShape(ctx: CanvasRenderingContext2D, fill: boolean): void;
+    getAABB() {
+        const center = this.getCenter();
+        return new AABB(center, center.clone());
+    }
 
-    renderAABB(ctx: CanvasRenderingContext2D, fill: boolean) {
-        const aabb = this.getAABB();
-        ctx.beginPath();
-        ctx.rect(aabb.min.x, aabb.min.y, aabb.max.x - aabb.min.x, aabb.max.y - aabb.min.y);
-        ctx.stroke();
-        if (fill) ctx.fill();
+    getFurthestPoint(_direction: Vector2) {
+        return this.getCenter();
+    }
+
+    getClosestEdge(direction: Vector2): [Vector2, Vector2] {
+        const point = this.getFurthestPoint(direction.clone().mult(-1));
+        const perp = direction.clone().perp().mult(1e-6);
+        return [
+            point.clone().sub(perp),
+            point.clone().add(perp)
+        ];
+    }
+
+    calculateInertia(_mass: number) {
+        return 0;
+    }
+
+    containsPoint(point: Vector2) {
+        const pointCollider = new Collider(point);
+        const simplex = gjk(this, pointCollider);
+        return simplex !== null;
     }
 }
