@@ -19,8 +19,8 @@ function clipSegment(segment: [Vector2, Vector2], planeNormal: Vector2, planeOff
 }
 
 export default function clipping(collider1: Collider, collider2: Collider, normal: Vector2): [Vector2, number][] {
-    let refEdge = collider1.getClosestEdge(normal);
-    let incEdge = collider2.getClosestEdge(normal.clone().mult(-1));
+    let refEdge = collider1.getClosestEdge(normal.clone().mult(-1));
+    let incEdge = collider2.getClosestEdge(normal);
 
     const refVec = refEdge[1].clone().sub(refEdge[0]);
     const incVec = incEdge[1].clone().sub(incEdge[0]);
@@ -63,5 +63,5 @@ export default function clipping(collider1: Collider, collider2: Collider, norma
 
     return clipped
         .filter(point => refPerp.dot(point) < maxDepth)
-        .map(point => [point, normal.dot(point) - refOffset]);
+        .map(point => [point, refOffset - normal.dot(point)]);
 }

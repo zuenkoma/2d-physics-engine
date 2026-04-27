@@ -50,28 +50,47 @@ box3.addCollider(new BoxCollider(new Vector2(0.5, 0.5)));
 box3.setMass(0.3);
 world.addBody(box3);
 
+{
+    function createBox(x, y) {
+        const box = new Body(new Vector2(x, y));
+        box.addCollider(new BoxCollider(new Vector2(0.5, 0.5)));
+        box.setMass(1);
+        world.addBody(box);
+    }
+    for (let y = 0; y < 5; y++) {
+        createBox(7.5, y / 2);
+    }
+}
+
 const pressed = new Set();
 addEventListener('keydown', event => pressed.add(event.code));
 addEventListener('keyup', event => pressed.delete(event.code));
 
-const dt = 1 / 60;
-let jump = false;
+const STEP_TIME = 1 / 60;
+let time = 0, lastTime = Date.now();
+let lastGrounded = false;
 setInterval(() => {
-    const playerDir = +pressed.has('KeyD') - +pressed.has('KeyA');
-    if (player.onGround) {
-        player.applyImpulse(new Vector2(playerDir, 0));
-        if (pressed.has('KeyW') && !jump) {
-            player.applyImpulse(new Vector2(0, 10));
-            jump = true;
+    time += (Date.now() - lastTime) / 1000;
+    lastTime = Date.now();
+
+    for (; time > STEP_TIME; time -= STEP_TIME) {
+        const playerDir = +pressed.has('KeyD') - +pressed.has('KeyA');
+        if (player.isGrounded) {
+            player.applyImpulse(new Vector2(playerDir, 0));
+            if (pressed.has('KeyW') && !lastGrounded) {
+                player.applyImpulse(new Vector2(0, 7));
+                lastGrounded = true;
+            }
         }
+        else {
+            player.applyImpulse(new Vector2(playerDir / 5, 0));
+            lastGrounded = false;
+        }
+        player.velocity.x = Math.min(Math.max(player.velocity.x, -3), 3);
+
+        world.step(STEP_TIME);
     }
-    else {
-        player.applyImpulse(new Vector2(playerDir / 5, 0));
-        jump = false;
-    }
-    player.velocity.x = Math.min(Math.max(player.velocity.x, -3), 3);
-    world.step(dt);
-}, dt * 1000);
+}, STEP_TIME * 1000);
 
 
 const scale = 50;

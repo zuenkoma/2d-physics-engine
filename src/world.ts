@@ -7,11 +7,11 @@ import Vector2 from './vector2.ts';
 
 interface Contact {
     point: Vector2;
-    bias: number;
-    normalMass: number;
-    tangentMass: number;
+    penetration: number;
     normalImpulse: number;
     tangentImpulse: number;
+    normalMass: number;
+    tangentMass: number;
 }
 
 interface ContactManifold {
@@ -36,108 +36,136 @@ export default class World {
         this.bodies.splice(this.bodies.indexOf(body), 1);
     }
 
-    step(dt: number, iterations = 15) {
-        for (const body of this.bodies) {
-            body.onGround = false;
-            if (body.isStatic()) continue;
-            body.velocity.add(this.gravity.clone().mult(dt));
-        }
+    step(dt: number, iterations = 10, substeps = 5) {
+        for (let s = 0; s < substeps; ++s) {
+            for (const body of this.bodies) {
+                body.isGrounded = false;
+                body.groundVelocity = new Vector2(0, 0);
+                if (body.getInverseMass() === 0) continue;
+                body.velocity.add(this.gravity.clone().mult(dt / substeps / 2));
+            }
 
-        const manifolds: ContactManifold[] = [];
-        for (let i = 0; i < this.bodies.length; ++i) {
-            const body1 = this.bodies[i];
-            for (let j = i + 1; j < this.bodies.length; ++j) {
-                const body2 = this.bodies[j];
+            const manifolds: ContactManifold[] = [];
+            for (let b1 = 0; b1 < this.bodies.length; ++b1) {
+                const body1 = this.bodies[b1];
+                for (let b2 = b1 + 1; b2 < this.bodies.length; ++b2) {
+                    const body2 = this.bodies[b2];
 
-                for (const collider1 of body1.colliders) {
-                    for (const collider2 of body2.colliders) {
-                        const simplex = gjk(collider1, collider2);
-                        if (!simplex) continue;
+                    for (const collider1 of body1.colliders) {
+                        for (const collider2 of body2.colliders) {
+                            const simplex = gjk(collider1, collider2);
+                            if (!simplex) continue;
 
-                        const mtv = epa(simplex, collider1, collider2);
-                        const depth = mtv.length();
-                        if (depth === 0) continue;
+                            const mtv = epa(simplex, collider1, collider2);
+                            const depth = mtv.length();
+                            if (depth === 0) continue;
 
-                        const normal = mtv.clone().div(depth);
-                        const points = clipping(collider1, collider2, normal);
-                        const cachedManifold = this.manifoldCache.find(manifold =>
-                            ((manifold.collider1 === collider1 && manifold.collider2 === collider2) ||
-                                (manifold.collider1 === collider2 && manifold.collider2 === collider1)) &&
-                            manifold.contacts.length === points.length
-                        );
+                            const normal = mtv.clone().div(depth);
+                            const points = clipping(collider1, collider2, normal);
+                            const cachedManifold = this.manifoldCache.find(manifold =>
+                                ((manifold.collider1 === collider1 && manifold.collider2 === collider2) ||
+                                    (manifold.collider1 === collider2 && manifold.collider2 === collider1)) &&
+                                manifold.contacts.length === points.length
+                            );
 
-                        if (body2.position.clone().sub(body1.position).dot(body2.velocity.clone().sub(body1.velocity)) <= 0) {
-                            if (normal.y > 0.3) body1.onGround = true;
-                            if (normal.y < -0.3) body2.onGround = true;
-                        }
-
-                        manifolds.push({
-                            collider1, collider2,
-                            contacts: points.map(([point, penetration]) => {
-                                let normalImpulse = 0;
-                                let tangentImpulse = 0;
-                                if (cachedManifold) {
-                                    let minDistance = Infinity;
-                                    for (const contact of cachedManifold.contacts) {
-                                        const distance = contact.point.clone().sub(point).lengthSquared();
-                                        if (distance < minDistance && distance < 0.1) {
-                                            minDistance = distance;
-                                            normalImpulse = contact.normalImpulse * 0.95;
-                                            tangentImpulse = contact.tangentImpulse * 0.95;
+                            manifolds.push({
+                                collider1, collider2,
+                                contacts: points.map(([point, penetration]) => {
+                                    let normalImpulse = 0;
+                                    let tangentImpulse = 0;
+                                    if (cachedManifold) {
+                                        let minDistance = Infinity;
+                                        for (const contact of cachedManifold.contacts) {
+                                            const distance = contact.point.clone().sub(point).lengthSquared();
+                                            if (distance < minDistance && distance < 0.1) {
+                                                minDistance = distance;
+                                                normalImpulse = contact.normalImpulse * 0.95;
+                                                tangentImpulse = contact.tangentImpulse * 0.95;
+                                            }
                                         }
                                     }
-                                }
-                                return {
-                                    point,
-                                    bias: 0.5 / dt * Math.max(0, penetration - 0.01),
-                                    normalMass: Body.getEffectiveMass(body1, body2, point, normal),
-                                    tangentMass: Body.getEffectiveMass(body1, body2, point, normal.clone().perp()),
-                                    normalImpulse, tangentImpulse
-                                };
-                            }),
-                            normal,
-                            friction: Math.sqrt(body1.friction * body2.friction)
-                        });
+                                    return {
+                                        point, penetration, normalImpulse, tangentImpulse,
+                                        normalMass: Body.getEffectiveMass(body1, body2, point, normal),
+                                        tangentMass: Body.getEffectiveMass(body1, body2, point, normal.clone().perp())
+                                    };
+                                }),
+                                normal,
+                                friction: Math.sqrt(body1.friction * body2.friction)
+                            });
+                        }
                     }
                 }
             }
-        }
-        this.manifoldCache = manifolds;
+            this.manifoldCache = manifolds;
 
-        for (let i = 0; i < iterations; ++i) {
+            for (let i = 0; i < iterations; ++i) {
+                for (const manifold of manifolds) {
+                    const body1 = manifold.collider1.body!;
+                    const body2 = manifold.collider2.body!;
+
+                    for (const contact of manifold.contacts) {
+                        const velocity1 = body1.getVelocityAtPoint(contact.point);
+                        const velocity2 = body2.getVelocityAtPoint(contact.point);
+                        const relativeVelocity = velocity2.clone().sub(velocity1);
+
+                        const normalVelocity = relativeVelocity.dot(manifold.normal);
+                        const oldNormalImpulse = contact.normalImpulse;
+                        contact.normalImpulse = Math.max(0, oldNormalImpulse - normalVelocity * contact.normalMass);
+
+                        const normalImpulse = manifold.normal.clone().mult(contact.normalImpulse - oldNormalImpulse);
+                        body1.applyImpulse(normalImpulse.clone().mult(-1), contact.point);
+                        body2.applyImpulse(normalImpulse, contact.point);
+
+                        const tangent = manifold.normal.clone().perp();
+                        const tangentVelocity = relativeVelocity.dot(tangent);
+
+                        const oldTangentImpulse = contact.tangentImpulse;
+                        const maxTangentImpulse = manifold.friction * contact.normalImpulse;
+                        contact.tangentImpulse = Math.max(-maxTangentImpulse, Math.min(maxTangentImpulse, oldTangentImpulse - tangentVelocity * contact.tangentMass));
+                        const tangentImpulse = tangent.clone().mult(contact.tangentImpulse - oldTangentImpulse);
+                        body1.applyImpulse(tangentImpulse.clone().mult(-1), contact.point);
+                        body2.applyImpulse(tangentImpulse, contact.point);
+                    }
+                }
+            }
+
             for (const manifold of manifolds) {
                 const body1 = manifold.collider1.body!;
                 const body2 = manifold.collider2.body!;
 
+                if (manifold.normal.y < -0.7 && body1.getInverseMass() !== 0) {
+                    body1.isGrounded = true;
+                    const contact = manifold.contacts[0].point;
+                    const rx = contact.x - body2.position.x;
+                    const ry = contact.y - body2.position.y;
+                    body1.groundVelocity.x = body2.velocity.x - body2.angularVelocity * ry;
+                    body1.groundVelocity.y = body2.velocity.y + body2.angularVelocity * rx;
+                }
+
+                if (manifold.normal.y > 0.7 && body2.getInverseMass() !== 0) {
+                    body2.isGrounded = true;
+                    const contact = manifold.contacts[0].point;
+                    const rx = contact.x - body1.position.x;
+                    const ry = contact.y - body1.position.y;
+                    body2.groundVelocity.x = body1.velocity.x - body1.angularVelocity * ry;
+                    body2.groundVelocity.y = body1.velocity.y + body1.angularVelocity * rx;
+                }
+
+                const totalInvMass = body1.getInverseMass() + body2.getInverseMass();
                 for (const contact of manifold.contacts) {
-                    const velocity1 = body1.getVelocityAtPoint(contact.point);
-                    const velocity2 = body2.getVelocityAtPoint(contact.point);
-                    const relativeVelocity = velocity1.clone().sub(velocity2);
-
-                    const normalVelocity = relativeVelocity.dot(manifold.normal);
-                    const oldNormalImpulse = contact.normalImpulse;
-                    contact.normalImpulse = Math.max(0, oldNormalImpulse - (normalVelocity - contact.bias) * contact.normalMass);
-
-                    const normalImpulse = manifold.normal.clone().mult(contact.normalImpulse - oldNormalImpulse);
-                    body1.applyImpulse(normalImpulse, contact.point);
-                    body2.applyImpulse(normalImpulse.clone().mult(-1), contact.point);
-
-                    const tangent = manifold.normal.clone().perp();
-                    const tangentVelocity = relativeVelocity.dot(tangent);
-
-                    const oldTangentImpulse = contact.tangentImpulse;
-                    const maxTangentImpulse = manifold.friction * contact.normalImpulse;
-                    contact.tangentImpulse = Math.max(-maxTangentImpulse, Math.min(maxTangentImpulse, oldTangentImpulse - tangentVelocity * contact.tangentMass));
-                    const tangentImpulse = tangent.clone().mult(contact.tangentImpulse - oldTangentImpulse);
-                    body1.applyImpulse(tangentImpulse, contact.point);
-                    body2.applyImpulse(tangentImpulse.clone().mult(-1), contact.point);
+                    const impulse = manifold.normal.clone().mult(contact.penetration / totalInvMass / 3);
+                    body1.position.sub(impulse.clone().mult(body1.getInverseMass()));
+                    body2.position.add(impulse.clone().mult(body2.getInverseMass()));
                 }
             }
-        }
 
-        for (const body of this.bodies) {
-            body.position.add(body.velocity.clone().mult(dt));
-            body.rotation += body.angularVelocity * dt;
+            for (const body of this.bodies) {
+                if (body.getInverseMass() === 0) continue;
+                body.velocity.add(this.gravity.clone().mult(dt / substeps / 2));
+                body.position.add(body.velocity.clone().mult(dt / substeps));
+                body.rotation += body.angularVelocity * dt / substeps;
+            }
         }
     }
 }

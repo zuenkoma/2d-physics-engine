@@ -8,12 +8,14 @@ export default class Body {
     rotation: number;
     velocity = new Vector2(0, 0);
     angularVelocity = 0;
-    friction = 0.5;
-    onGround = false;
 
+    friction = 0.5;
     private inverseMass = 0;
     private inverseInertia = 0;
     private fixedRotation = false;
+
+    isGrounded = false;
+    groundVelocity = new Vector2(0, 0);
 
     constructor(position = new Vector2(0, 0), rotation = 0) {
         this.position = position;
@@ -39,13 +41,17 @@ export default class Body {
         this.inverseInertia = totalInertia > 0 ? 1 / totalInertia : 0;
     }
 
-    isStatic() {
-        return this.inverseMass === 0;
+    getInverseMass() {
+        return this.inverseMass;
     }
 
     setMass(mass: number) {
         this.inverseMass = 1 / mass;
         this.calculateInertia();
+    }
+
+    getInverseInertia() {
+        return this.inverseInertia;
     }
 
     setFixedRotation(fixed: boolean) {
