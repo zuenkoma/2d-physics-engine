@@ -56,7 +56,11 @@ export default class World {
                     if (!aabb1.intersects(aabb2)) continue;
 
                     for (const collider1 of body1.colliders) {
+                        if (collider1.isTrigger) continue;
+
                         for (const collider2 of body2.colliders) {
+                            if (collider2.isTrigger) continue;
+
                             const simplex = gjk(collider1, collider2);
                             if (!simplex) continue;
 

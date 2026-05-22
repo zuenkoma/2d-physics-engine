@@ -1,4 +1,4 @@
-import AABB from "../aabb.js";
+import AABB from '../aabb.js';
 import type Body from '../body.ts';
 import gjk from '../gjk.ts';
 import Vector2 from '../vector2.ts';
@@ -6,6 +6,7 @@ import Vector2 from '../vector2.ts';
 export default class Collider {
     body: Body | null = null;
     offset: Vector2;
+    isTrigger = false;
 
     constructor(position = new Vector2(0, 0)) {
         this.offset = position;
@@ -39,9 +40,10 @@ export default class Collider {
         return 0;
     }
 
-    containsPoint(point: Vector2): boolean {
-        const pointCollider = new Collider(point);
-        const simplex = gjk(this, pointCollider);
-        return simplex !== null;
+    intersects(other: Collider): boolean {
+        return (
+            this.getAABB().intersects(other.getAABB()) &&
+            gjk(this, other) !== null
+        );
     }
 }
