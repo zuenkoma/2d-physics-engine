@@ -7,9 +7,9 @@ export default class Vector2 {
         this.y = y;
     }
 
-    set(vector: Vector2): this {
-        this.x = vector.x;
-        this.y = vector.y;
+    set(other: Vector2): this {
+        this.x = other.x;
+        this.y = other.y;
         return this;
     }
 
@@ -17,32 +17,32 @@ export default class Vector2 {
         return Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     }
 
-    add(vector: Vector2): this {
-        this.x += vector.x;
-        this.y += vector.y;
+    add(other: Vector2): this {
+        this.x += other.x;
+        this.y += other.y;
         return this;
     }
-    sub(vector: Vector2): this {
-        this.x -= vector.x;
-        this.y -= vector.y;
+    sub(other: Vector2): this {
+        this.x -= other.x;
+        this.y -= other.y;
         return this;
     }
-    mult(value: number): this {
-        this.x *= value;
-        this.y *= value;
+    mult(other: number): this {
+        this.x *= other;
+        this.y *= other;
         return this;
     }
 
     div(value: number): this;
-    div(value: Vector2): this;
-    div(valueOrVec: number | Vector2): this {
-        if (valueOrVec instanceof Vector2) {
-            this.x /= valueOrVec.x;
-            this.y /= valueOrVec.y;
+    div(other: Vector2): this;
+    div(valueOrOther: number | Vector2): this {
+        if (valueOrOther instanceof Vector2) {
+            this.x /= valueOrOther.x;
+            this.y /= valueOrOther.y;
         }
         else {
-            this.x /= valueOrVec;
-            this.y /= valueOrVec;
+            this.x /= valueOrOther;
+            this.y /= valueOrOther;
         }
         return this;
     }
@@ -60,11 +60,11 @@ export default class Vector2 {
         return this;
     }
 
-    dot(vector: Vector2): number {
-        return this.x * vector.x + this.y * vector.y;
+    dot(other: Vector2): number {
+        return this.x * other.x + this.y * other.y;
     }
-    cross(vector: Vector2): number {
-        return this.x * vector.y - this.y * vector.x;
+    cross(other: Vector2): number {
+        return this.x * other.y - this.y * other.x;
     }
 
     perp(): this {
