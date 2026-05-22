@@ -48,8 +48,12 @@ export default class World {
             const manifolds: ContactManifold[] = [];
             for (let b1 = 0; b1 < this.bodies.length; ++b1) {
                 const body1 = this.bodies[b1];
+                const aabb1 = body1.getAABB();
+
                 for (let b2 = b1 + 1; b2 < this.bodies.length; ++b2) {
                     const body2 = this.bodies[b2];
+                    const aabb2 = body2.getAABB();
+                    if (!aabb1.intersects(aabb2)) continue;
 
                     for (const collider1 of body1.colliders) {
                         for (const collider2 of body2.colliders) {
