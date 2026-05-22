@@ -1,7 +1,7 @@
 import type Collider from './colliders/collider.ts';
 import Vector2 from './vector2.ts';
 
-export default function epa(simplex: [Vector2, Vector2, Vector2], collider1: Collider, collider2: Collider) {
+export default function epa(simplex: [Vector2, Vector2, Vector2], collider1: Collider, collider2: Collider): Vector2 {
     const polytope = simplex.map(v => v.clone());
 
     while (true) {

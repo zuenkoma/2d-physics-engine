@@ -14,7 +14,7 @@ export default class CapsuleCollider extends Collider {
         this.rotation = rotation;
     }
 
-    getEndpoints() {
+    getEndpoints(): [Vector2, Vector2] {
         const halfHeight = new Vector2(0, 1).rotate(this.rotation).mult(this.height / 2 - this.radius);
         const start = halfHeight.clone().add(this.offset);
         const end = halfHeight.clone().mult(-1).add(this.offset);
@@ -22,19 +22,19 @@ export default class CapsuleCollider extends Collider {
             start.rotate(this.body.rotation).add(this.body.position);
             end.rotate(this.body.rotation).add(this.body.position);
         }
-        return { start, end };
+        return [start, end];
     }
 
-    getAABB() {
-        const { start, end } = this.getEndpoints();
+    getAABB(): AABB {
+        const [start, end] = this.getEndpoints();
         const radius = new Vector2(this.radius, this.radius);
         const min = new Vector2(Math.min(start.x, end.x), Math.min(start.y, end.y));
         const max = new Vector2(Math.max(start.x, end.x), Math.max(start.y, end.y));
         return new AABB(min.sub(radius), max.add(radius));
     }
 
-    getFurthestPoint(direction: Vector2) {
-        const { start, end } = this.getEndpoints();
+    getFurthestPoint(direction: Vector2): Vector2 {
+        const [start, end] = this.getEndpoints();
         const dotStart = start.dot(direction);
         const dotEnd = end.dot(direction);
         const basePoint = dotEnd > dotStart ? end : start;
@@ -42,7 +42,7 @@ export default class CapsuleCollider extends Collider {
     }
 
     getClosestEdge(direction: Vector2): [Vector2, Vector2] {
-        const { start, end } = this.getEndpoints();
+        const [start, end] = this.getEndpoints();
         const perp = end.clone().sub(start).perp().normalize();
         if (Math.abs(perp.cross(direction)) < 1e-6) {
             const offset = perp.mult(Math.sign(-perp.dot(direction)) * this.radius);
@@ -56,7 +56,7 @@ export default class CapsuleCollider extends Collider {
         ];
     }
 
-    calculateInertia(mass: number) {
+    calculateInertia(mass: number): number {
         const cylinderHeight = Math.max(0, this.height - 2 * this.radius);
         const cylinderMass = mass * (cylinderHeight / this.height);
         const hemisphereMass = mass * (this.radius / this.height);

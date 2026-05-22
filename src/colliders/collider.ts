@@ -11,18 +11,18 @@ export default class Collider {
         this.offset = position;
     }
 
-    getCenter() {
+    getCenter(): Vector2 {
         const center = this.offset.clone();
         if (this.body) center.rotate(this.body.rotation).add(this.body.position);
         return center;
     }
 
-    getAABB() {
+    getAABB(): AABB {
         const center = this.getCenter();
         return new AABB(center, center.clone());
     }
 
-    getFurthestPoint(_direction: Vector2) {
+    getFurthestPoint(_direction: Vector2): Vector2 {
         return this.getCenter();
     }
 
@@ -35,11 +35,11 @@ export default class Collider {
         ];
     }
 
-    calculateInertia(_mass: number) {
+    calculateInertia(_mass: number): number {
         return 0;
     }
 
-    containsPoint(point: Vector2) {
+    containsPoint(point: Vector2): boolean {
         const pointCollider = new Collider(point);
         const simplex = gjk(this, pointCollider);
         return simplex !== null;

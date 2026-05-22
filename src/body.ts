@@ -22,7 +22,7 @@ export default class Body {
         this.rotation = rotation;
     }
 
-    protected calculateInertia() {
+    protected calculateInertia(): void {
         if (this.inverseMass === 0 || this.fixedRotation) {
             this.inverseInertia = 0;
             return;
@@ -41,41 +41,41 @@ export default class Body {
         this.inverseInertia = totalInertia > 0 ? 1 / totalInertia : 0;
     }
 
-    getInverseMass() {
+    getInverseMass(): number {
         return this.inverseMass;
     }
 
-    setMass(mass: number) {
+    setMass(mass: number): void {
         this.inverseMass = 1 / mass;
         this.calculateInertia();
     }
 
-    getInverseInertia() {
+    getInverseInertia(): number {
         return this.inverseInertia;
     }
 
-    setFixedRotation(fixed: boolean) {
+    setFixedRotation(fixed: boolean): void {
         this.fixedRotation = fixed;
         this.calculateInertia();
     }
 
-    addCollider(collider: Collider) {
+    addCollider(collider: Collider): void {
         if (collider.body) throw new Error('collider already associated with a body');
         this.colliders.push(collider);
         collider.body = this;
         this.calculateInertia();
     }
-    removeCollider(collider: Collider) {
+    removeCollider(collider: Collider): void {
         this.colliders.splice(this.colliders.indexOf(collider), 1);
         collider.body = null;
         this.calculateInertia();
     }
 
-    getVelocityAtPoint(point: Vector2) {
+    getVelocityAtPoint(point: Vector2): Vector2 {
         return this.velocity.clone().add(point.clone().sub(this.position).perp().mult(this.angularVelocity));
     }
 
-    applyImpulse(impulse: Vector2, applicationPoint = this.position) {
+    applyImpulse(impulse: Vector2, applicationPoint = this.position): void {
         if (this.inverseMass === 0) return;
         this.velocity.add(impulse.clone().mult(this.inverseMass));
         const leverArm = applicationPoint.clone().sub(this.position);
@@ -83,7 +83,7 @@ export default class Body {
         this.angularVelocity += torque * this.inverseInertia;
     }
 
-    static getEffectiveMass(body1: Body, body2: Body, contactPoint: Vector2, normal: Vector2) {
+    static getEffectiveMass(body1: Body, body2: Body, contactPoint: Vector2, normal: Vector2): number {
         const lever1 = contactPoint.clone().sub(body1.position).cross(normal);
         const lever2 = contactPoint.clone().sub(body2.position).cross(normal);
         return 1 / (

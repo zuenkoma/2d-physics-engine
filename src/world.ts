@@ -28,15 +28,15 @@ export default class World {
 
     gravity = new Vector2(0, -9.81);
 
-    addBody(body: Body) {
+    addBody(body: Body): void {
         if (this.bodies.includes(body)) return;
         this.bodies.push(body);
     }
-    removeBody(body: Body) {
+    removeBody(body: Body): void {
         this.bodies.splice(this.bodies.indexOf(body), 1);
     }
 
-    step(dt: number, iterations = 10, substeps = 5) {
+    step(dt: number, iterations = 10, substeps = 5): void {
         for (let s = 0; s < substeps; ++s) {
             for (const body of this.bodies) {
                 body.isGrounded = false;

@@ -9,7 +9,7 @@ export default class AABB {
         this.max = max;
     }
 
-    isIntersects(aabb: AABB) {
+    isIntersects(aabb: AABB): boolean {
         return this.min.x <= aabb.max.x && this.max.x >= aabb.min.x && this.min.y <= aabb.max.y && this.max.y >= aabb.min.y;
     }
 }

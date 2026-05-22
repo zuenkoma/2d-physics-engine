@@ -12,7 +12,7 @@ export default class BoxCollider extends Collider {
         this.rotation = rotation;
     }
 
-    getVertices() {
+    getVertices(): Vector2[] {
         const halfSize = this.size.clone().div(2);
         const vertices = [
             new Vector2(-halfSize.x, -halfSize.y),
@@ -27,7 +27,7 @@ export default class BoxCollider extends Collider {
         return vertices;
     }
 
-    getAABB() {
+    getAABB(): AABB {
         let minX = Infinity, minY = Infinity;
         let maxX = -Infinity, maxY = -Infinity;
 
@@ -41,7 +41,7 @@ export default class BoxCollider extends Collider {
         return new AABB(new Vector2(minX, minY), new Vector2(maxX, maxY));
     }
 
-    getFurthestPoint(direction: Vector2) {
+    getFurthestPoint(direction: Vector2): Vector2 {
         let max = -Infinity;
         let furthestPoint!: Vector2;
         for (const vertex of this.getVertices()) {
@@ -54,7 +54,7 @@ export default class BoxCollider extends Collider {
         return furthestPoint;
     }
 
-    getClosestEdge(direction: Vector2) {
+    getClosestEdge(direction: Vector2): [Vector2, Vector2] {
         let min = Infinity;
         let edge: [Vector2, Vector2];
         const vertices = this.getVertices();
@@ -70,7 +70,7 @@ export default class BoxCollider extends Collider {
         return edge!;
     }
 
-    calculateInertia(mass: number) {
+    calculateInertia(mass: number): number {
         return mass * this.size.lengthSquared() / 12;
     }
 }

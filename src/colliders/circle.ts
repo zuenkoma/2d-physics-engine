@@ -10,19 +10,19 @@ export default class CircleCollider extends Collider {
         this.radius = radius;
     }
 
-    getAABB() {
+    getAABB(): AABB {
         const center = this.getCenter();
         const min = center.clone().sub(new Vector2(this.radius, this.radius));
         const max = center.clone().add(new Vector2(this.radius, this.radius));
         return new AABB(min, max);
     }
 
-    getFurthestPoint(direction: Vector2) {
+    getFurthestPoint(direction: Vector2): Vector2 {
         const center = this.getCenter();
         return center.clone().add(direction.clone().normalize().mult(this.radius));
     }
 
-    calculateInertia(mass: number) {
+    calculateInertia(mass: number): number {
         return mass * this.radius ** 2 / 2;
     }
 }

@@ -7,35 +7,35 @@ export default class Vector2 {
         this.y = y;
     }
 
-    set(vector: Vector2) {
+    set(vector: Vector2): this {
         this.x = vector.x;
         this.y = vector.y;
         return this;
     }
 
-    clone(): Vector2 {
+    clone(): this {
         return Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     }
 
-    add(vector: Vector2) {
+    add(vector: Vector2): this {
         this.x += vector.x;
         this.y += vector.y;
         return this;
     }
-    sub(vector: Vector2) {
+    sub(vector: Vector2): this {
         this.x -= vector.x;
         this.y -= vector.y;
         return this;
     }
-    mult(value: number) {
+    mult(value: number): this {
         this.x *= value;
         this.y *= value;
         return this;
     }
 
-    div(value: number): Vector2;
-    div(value: Vector2): Vector2;
-    div(valueOrVec: number | Vector2) {
+    div(value: number): this;
+    div(value: Vector2): this;
+    div(valueOrVec: number | Vector2): this {
         if (valueOrVec instanceof Vector2) {
             this.x /= valueOrVec.x;
             this.y /= valueOrVec.y;
@@ -47,34 +47,34 @@ export default class Vector2 {
         return this;
     }
 
-    lengthSquared() {
+    lengthSquared(): number {
         return this.x * this.x + this.y * this.y;
     }
-    length() {
+    length(): number {
         return Math.sqrt(this.lengthSquared());
     }
-    normalize() {
+    normalize(): this {
         const length = this.length();
         this.x /= length;
         this.y /= length;
         return this;
     }
 
-    dot(vector: Vector2) {
+    dot(vector: Vector2): number {
         return this.x * vector.x + this.y * vector.y;
     }
-    cross(vector: Vector2) {
+    cross(vector: Vector2): number {
         return this.x * vector.y - this.y * vector.x;
     }
 
-    perp() {
+    perp(): this {
         const x = -this.y;
         this.y = this.x;
         this.x = x;
         return this;
     }
 
-    rotate(angle: number) {
+    rotate(angle: number): this {
         const cos = Math.cos(angle);
         const sin = Math.sin(angle);
         const x = this.x * cos - this.y * sin;
@@ -83,7 +83,7 @@ export default class Vector2 {
         this.y = y;
         return this;
     }
-    getAngle() {
+    getAngle(): number {
         return Math.atan2(this.x, this.y);
     }
 }

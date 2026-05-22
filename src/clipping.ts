@@ -1,7 +1,7 @@
 import type Collider from './colliders/collider.ts';
 import type Vector2 from './vector2.ts';
 
-function clipSegment(segment: [Vector2, Vector2], planeNormal: Vector2, planeOffset: number) {
+function clipSegment(segment: [Vector2, Vector2], planeNormal: Vector2, planeOffset: number): Vector2[] {
     const startDist = planeNormal.dot(segment[0]) - planeOffset;
     const endDist = planeNormal.dot(segment[1]) - planeOffset;
     const clippedPoints: Vector2[] = [];
