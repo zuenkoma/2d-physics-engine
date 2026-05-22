@@ -1,4 +1,4 @@
-import { Body, BoxCollider, CapsuleCollider, CircleCollider, Vector2, World } from '../dist/index.js';
+import { Body, BoxCollider, CapsuleCollider, CircleCollider, Collider, Vector2, World } from '../dist/index.js';
 import { renderBox, renderCapsule, renderCircle } from './render.js';
 
 const canvas = document.getElementById('canvas');
@@ -78,6 +78,7 @@ setInterval(() => {
         if (player.isGrounded) {
             player.applyImpulse(new Vector2(playerDir, 0));
             if (pressed.has('KeyW') && !lastGrounded) {
+                player.position.y += 0.1;
                 player.applyImpulse(new Vector2(0, 7));
                 lastGrounded = true;
             }
@@ -126,7 +127,7 @@ function render() {
     ctx.lineWidth = 0.02;
     for (const body of world.bodies) {
         for (const collider of body.colliders) {
-            const over = mouse && collider.containsPoint(mouse.clone());
+            const over = mouse && collider.intersects(new Collider(mouse.clone()));
             ctx.strokeStyle = over ? 'red' : 'black';
             if (collider instanceof BoxCollider) renderBox(collider, ctx, false);
             if (collider instanceof CapsuleCollider) renderCapsule(collider, ctx, false);

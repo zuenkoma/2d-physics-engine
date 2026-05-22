@@ -11,7 +11,7 @@ export function renderBox(box, ctx, fill = false) {
 }
 
 export function renderCapsule(capsule, ctx, fill = false) {
-    const { start, end } = capsule.getEndpoints();
+    const [start, end] = capsule.getEndpoints();
     const angle = Math.atan2(end.y - start.y, end.x - start.x);
     const perpendicular = angle - Math.PI / 2;
     ctx.beginPath();
