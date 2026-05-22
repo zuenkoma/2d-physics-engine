@@ -1,3 +1,4 @@
+import AABB from './aabb.ts';
 import type Collider from './colliders/collider.ts';
 import Vector2 from './vector2.ts';
 
@@ -20,6 +21,26 @@ export default class Body {
     constructor(position = new Vector2(0, 0), rotation = 0) {
         this.position = position;
         this.rotation = rotation;
+    }
+
+    addCollider(collider: Collider): void {
+        if (collider.body) throw new Error('collider already associated with a body');
+        this.colliders.push(collider);
+        collider.body = this;
+        this.calculateInertia();
+    }
+    removeCollider(collider: Collider): void {
+        this.colliders.splice(this.colliders.indexOf(collider), 1);
+        collider.body = null;
+        this.calculateInertia();
+    }
+
+    getAABB(): AABB {
+        const aabb = new AABB();
+        for (const collider of this.colliders) {
+            aabb.encapsulate(collider.getAABB());
+        }
+        return aabb;
     }
 
     protected calculateInertia(): void {
@@ -56,18 +77,6 @@ export default class Body {
 
     setFixedRotation(fixed: boolean): void {
         this.fixedRotation = fixed;
-        this.calculateInertia();
-    }
-
-    addCollider(collider: Collider): void {
-        if (collider.body) throw new Error('collider already associated with a body');
-        this.colliders.push(collider);
-        collider.body = this;
-        this.calculateInertia();
-    }
-    removeCollider(collider: Collider): void {
-        this.colliders.splice(this.colliders.indexOf(collider), 1);
-        collider.body = null;
         this.calculateInertia();
     }
 
