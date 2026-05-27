@@ -33,7 +33,7 @@ export default function epa(simplex: [Vector2, Vector2, Vector2], collider1: Col
             polytope.splice(index, 0, support);
         }
         if (distance - minDistance <= 1e-6 || polytope.length >= 50) {
-            return minNormal.mult(minDistance);
+            return minNormal.mult(Math.max(0, minDistance));
         }
     }
 }

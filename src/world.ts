@@ -70,6 +70,8 @@ export default class World {
 
                             const normal = Vector2.div(mtv, depth);
                             const points = clipping(collider1, collider2, normal);
+                            if (points.length === 0) continue;
+
                             const cachedManifold = this.manifoldCache.find(manifold =>
                                 ((manifold.collider1 === collider1 && manifold.collider2 === collider2) ||
                                     (manifold.collider1 === collider2 && manifold.collider2 === collider1)) &&
