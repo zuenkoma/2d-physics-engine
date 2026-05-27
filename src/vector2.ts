@@ -21,9 +21,9 @@ export default class Vector2 {
         this.y -= other.y;
         return this;
     }
-    mult(other: number): this {
-        this.x *= other;
-        this.y *= other;
+    mult(value: number): this {
+        this.x *= value;
+        this.y *= value;
         return this;
     }
     div(value: number): this {

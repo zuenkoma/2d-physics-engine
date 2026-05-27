@@ -45,14 +45,15 @@ export default function clipping(collider1: Collider, collider2: Collider, norma
     }
 
     let refCollider = collider1;
-    let refDir = refVec.clone();
-    if (Math.abs(Vector2.div(incVec, incLenSq).dot(normal)) < Math.abs(Vector2.div(refVec, refLenSq).dot(normal))) {
+    let refDir = Vector2.div(refVec, refLenSq);
+    const incDir = Vector2.div(incVec, incLenSq);
+
+    if (Math.abs(incDir.dot(normal)) < Math.abs(refDir.dot(normal))) {
         [refEdge, incEdge] = [incEdge, refEdge];
         refCollider = collider2;
-        refDir = incVec.clone();
+        refDir = incDir;
         normal = Vector2.mult(normal, -1);
     }
-    refDir.normalize();
 
     let clipped = clipEdge(incEdge, refDir, refDir.dot(refEdge.start));
     clipped = clipEdge(new Edge(clipped[0], clipped[1]), Vector2.mult(refDir, -1), -refDir.dot(refEdge.end));
