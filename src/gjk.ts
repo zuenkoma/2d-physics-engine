@@ -12,42 +12,42 @@ export default function gjk(collider1: Collider, collider2: Collider): [Vector2,
 
     for (let i = 0; i < 50; ++i) {
         const point1 = collider1.getFurthestPoint(direction);
-        const point2 = collider2.getFurthestPoint(direction.clone().mult(-1));
+        const point2 = collider2.getFurthestPoint(Vector2.mult(direction, -1));
 
-        const support = point1.clone().sub(point2);
+        const support = Vector2.sub(point1, point2);
         if (support.dot(direction) <= 0) return null;
         simplex.push(support);
 
         switch (simplex.length) {
             case 1: {
                 const [a] = simplex;
-                direction.set(a).mult(-1).normalize();
+                direction = Vector2.mult(a, -1).normalize();
                 break;
             }
             case 2: {
                 const [b, a] = simplex;
-                const ba = a.clone().sub(b);
+                const ba = Vector2.sub(a, b);
                 if (ba.dot(a) < 0) return null;
-                const perp = ba.clone().perp();
+                const perp = Vector2.perp(ba);
                 if (perp.dot(a) > 0) perp.mult(-1);
-                direction.set(perp).normalize();
+                direction = perp.normalize();
                 break;
             }
             case 3: {
                 const [c, b, a] = simplex;
-                const ba = a.clone().sub(b);
-                const ca = a.clone().sub(c);
+                const ba = Vector2.sub(a, b);
+                const ca = Vector2.sub(a, c);
                 const baPerp = ba.clone().perp();
-                const perpB = baPerp.clone().mult(ba.cross(ca));
+                const perpB = Vector2.mult(baPerp, ba.cross(ca));
                 if (perpB.dot(a) < 0) {
                     simplex.splice(1, 1);
-                    direction.set(perpB).normalize();
+                    direction = perpB.normalize();
                     break;
                 }
-                const perpC = ca.clone().perp().mult(ca.cross(ba));
+                const perpC = Vector2.perp(ca).mult(ca.cross(ba));
                 if (perpC.dot(a) < 0) {
                     simplex.splice(0, 1);
-                    direction.set(perpC).normalize();
+                    direction = perpC.normalize();
                     break;
                 }
                 return baPerp.dot(ca) < 0 ? [b, c, a] : [c, b, a];

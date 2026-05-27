@@ -1,4 +1,5 @@
 import AABB from '../aabb.ts';
+import Edge from '../edge.ts';
 import Vector2 from '../vector2.ts';
 import Collider from './collider.ts';
 
@@ -6,14 +7,14 @@ export default class BoxCollider extends Collider {
     size: Vector2;
     rotation: number;
 
-    constructor(size: Vector2, offset = new Vector2(0, 0), rotation = 0) {
+    constructor(size: Vector2, offset?: Vector2, rotation = 0) {
         super(offset);
         this.size = size;
         this.rotation = rotation;
     }
 
     getVertices(): Vector2[] {
-        const halfSize = this.size.clone().div(2);
+        const halfSize = Vector2.div(this.size, 2);
         const vertices = [
             new Vector2(-halfSize.x, -halfSize.y),
             new Vector2(halfSize.x, -halfSize.y),
@@ -54,23 +55,23 @@ export default class BoxCollider extends Collider {
         return furthestPoint;
     }
 
-    getClosestEdge(direction: Vector2): [Vector2, Vector2] {
+    getClosestEdge(direction: Vector2): Edge {
         let min = Infinity;
-        let edge: [Vector2, Vector2];
+        let edge: Edge;
         const vertices = this.getVertices();
         for (let i = 0; i < 4; ++i) {
             const start = vertices[i];
             const end = vertices[(i + 1) % 4];
-            const dot = start.clone().sub(end).perp().dot(direction);
+            const dot = Vector2.sub(start, end).perp().dot(direction);
             if (dot < min) {
                 min = dot;
-                edge = [start, end];
+                edge = new Edge(start, end);
             }
         }
         return edge!;
     }
 
     calculateInertia(mass: number): number {
-        return mass * this.size.lengthSquared() / 12;
+        return mass * this.size.lengthSquared / 12;
     }
 }

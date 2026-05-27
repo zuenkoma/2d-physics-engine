@@ -4,9 +4,13 @@ export default class AABB {
     min: Vector2;
     max: Vector2;
 
-    constructor(min: Vector2 = new Vector2(Infinity, Infinity), max: Vector2 = new Vector2(-Infinity, -Infinity)) {
-        this.min = min;
-        this.max = max;
+    constructor(min?: Vector2, max?: Vector2) {
+        this.min = min ? min.clone() : new Vector2(Infinity, Infinity);
+        this.max = max ? max.clone() : new Vector2(-Infinity, -Infinity);
+    }
+
+    clone(): this {
+        return Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     }
 
     intersects(other: AABB): boolean {

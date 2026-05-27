@@ -5,21 +5,20 @@ import Collider from './collider.ts';
 export default class CircleCollider extends Collider {
     radius: number;
 
-    constructor(radius: number, offset = new Vector2(0, 0)) {
+    constructor(radius: number, offset?: Vector2) {
         super(offset);
         this.radius = radius;
     }
 
     getAABB(): AABB {
         const center = this.getCenter();
-        const min = center.clone().sub(new Vector2(this.radius, this.radius));
-        const max = center.clone().add(new Vector2(this.radius, this.radius));
+        const min = Vector2.sub(center, new Vector2(this.radius, this.radius));
+        const max = Vector2.add(center, new Vector2(this.radius, this.radius));
         return new AABB(min, max);
     }
 
     getFurthestPoint(direction: Vector2): Vector2 {
-        const center = this.getCenter();
-        return center.clone().add(direction.clone().normalize().mult(this.radius));
+        return this.getCenter().add(Vector2.normalize(direction).mult(this.radius));
     }
 
     calculateInertia(mass: number): number {

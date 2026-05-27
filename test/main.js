@@ -10,10 +10,10 @@ const ground = new Body(new Vector2(0, -3), 0);
 ground.addCollider(new BoxCollider(new Vector2(100, 0.3)));
 world.addBody(ground);
 
-const player = new Body(new Vector2(0, 0), 0);
+const player = new Body(new Vector2(2.3, 0.3), 0);
 player.addCollider(new CapsuleCollider(1.25, 0.375));
-player.setFixedRotation(true);
-player.setMass(1);
+player.fixedRotation = true;
+player.mass = 1;
 world.addBody(player);
 
 const platform1 = new Body(new Vector2(3, -1));
@@ -22,39 +22,39 @@ world.addBody(platform1);
 
 const circle1 = new Body(new Vector2(3, 0));
 circle1.addCollider(new CircleCollider(0.5));
-circle1.setMass(1);
+circle1.mass = 1;
 world.addBody(circle1);
 
 const box1 = new Body(new Vector2(6, -0.5));
 box1.addCollider(new BoxCollider(new Vector2(1, 1)));
-box1.setMass(1);
+box1.mass = 1;
 world.addBody(box1);
 
 const box2 = new Body(new Vector2(6.3, -2));
 box2.addCollider(new BoxCollider(new Vector2(1, 1)));
-box2.setMass(1);
+box2.mass = 1;
 world.addBody(box2);
 
 const sbox = new Body(new Vector2(-3, -2.7));
 sbox.addCollider(new BoxCollider(new Vector2(0.3, 0.3)));
-sbox.setMass(3);
+sbox.mass = 3;
 world.addBody(sbox);
 
 const paddle = new Body(new Vector2(-3, -2.4));
 paddle.addCollider(new BoxCollider(new Vector2(3, 0.3)));
-paddle.setMass(1);
+paddle.mass = 1;
 world.addBody(paddle);
 
 const box3 = new Body(new Vector2(-4, -2));
 box3.addCollider(new BoxCollider(new Vector2(0.5, 0.5)));
-box3.setMass(0.3);
+box3.mass = 0.3;
 world.addBody(box3);
 
 {
     function createBox(x, y) {
         const box = new Body(new Vector2(x, y));
         box.addCollider(new BoxCollider(new Vector2(0.5, 0.5)));
-        box.setMass(1);
+        box.mass = 1;
         world.addBody(box);
     }
     for (let y = 0; y < 5; y++) {
@@ -127,7 +127,7 @@ function render() {
     ctx.lineWidth = 0.02;
     for (const body of world.bodies) {
         for (const collider of body.colliders) {
-            const over = mouse && collider.intersects(new Collider(mouse.clone()));
+            const over = mouse && collider.intersects(new Collider(mouse));
             ctx.strokeStyle = over ? 'red' : 'black';
             if (collider instanceof BoxCollider) renderBox(collider, ctx, false);
             if (collider instanceof CapsuleCollider) renderCapsule(collider, ctx, false);

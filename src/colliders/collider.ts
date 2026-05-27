@@ -1,5 +1,6 @@
 import AABB from '../aabb.js';
 import type Body from '../body.ts';
+import Edge from '../edge.ts';
 import gjk from '../gjk.ts';
 import Vector2 from '../vector2.ts';
 
@@ -8,8 +9,8 @@ export default class Collider {
     offset: Vector2;
     isTrigger = false;
 
-    constructor(position = new Vector2(0, 0)) {
-        this.offset = position;
+    constructor(position?: Vector2) {
+        this.offset = position ? position.clone() : new Vector2(0, 0);
     }
 
     getCenter(): Vector2 {
@@ -20,20 +21,16 @@ export default class Collider {
 
     getAABB(): AABB {
         const center = this.getCenter();
-        return new AABB(center, center.clone());
+        return new AABB(center, center);
     }
 
     getFurthestPoint(_direction: Vector2): Vector2 {
         return this.getCenter();
     }
 
-    getClosestEdge(direction: Vector2): [Vector2, Vector2] {
-        const point = this.getFurthestPoint(direction.clone().mult(-1));
-        const perp = direction.clone().perp().mult(1e-6);
-        return [
-            point.clone().sub(perp),
-            point.clone().add(perp)
-        ];
+    getClosestEdge(direction: Vector2): Edge {
+        const point = this.getFurthestPoint(Vector2.mult(direction, -1));
+        return new Edge(point, point);
     }
 
     calculateInertia(_mass: number): number {

@@ -14,7 +14,7 @@ export default function epa(simplex: [Vector2, Vector2, Vector2], collider1: Col
 
             const point1 = polytope[i];
             const point2 = polytope[j];
-            const normal = point2.clone().sub(point1).perp().normalize();
+            const normal = Vector2.sub(point2, point1).perp().normalize();
             const distance = normal.dot(point1);
 
             if (distance < minDistance) {
@@ -25,8 +25,8 @@ export default function epa(simplex: [Vector2, Vector2, Vector2], collider1: Col
         }
 
         const point1 = collider1.getFurthestPoint(minNormal);
-        const point2 = collider2.getFurthestPoint(minNormal.clone().mult(-1));
-        const support = point1.clone().sub(point2);
+        const point2 = collider2.getFurthestPoint(Vector2.mult(minNormal, -1));
+        const support = Vector2.sub(point1, point2);
         const distance = minNormal.dot(support);
 
         if (distance - minDistance > 1e-6) {

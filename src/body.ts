@@ -11,15 +11,15 @@ export default class Body {
     angularVelocity = 0;
 
     friction = 0.5;
-    private inverseMass = 0;
-    private inverseInertia = 0;
-    private fixedRotation = false;
+    private _inverseMass = 0;
+    private _inverseInertia = 0;
+    private _fixedRotation = false;
 
     isGrounded = false;
     groundVelocity = new Vector2(0, 0);
 
-    constructor(position = new Vector2(0, 0), rotation = 0) {
-        this.position = position;
+    constructor(position?: Vector2, rotation = 0) {
+        this.position = position ? position.clone() : new Vector2(0, 0);
         this.rotation = rotation;
     }
 
@@ -44,62 +44,71 @@ export default class Body {
     }
 
     protected calculateInertia(): void {
-        if (this.inverseMass === 0 || this.fixedRotation) {
-            this.inverseInertia = 0;
+        if (this._inverseMass === 0 || this._fixedRotation) {
+            this._inverseInertia = 0;
             return;
         }
 
         let totalInertia = 0;
-        const mass = 1 / this.inverseMass;
+        const mass = 1 / this._inverseMass;
 
         for (const collider of this.colliders) {
             const colliderInertia = collider.calculateInertia(mass);
             const offset = collider.getCenter().sub(this.position);
-            const steinerTerm = offset.lengthSquared() * mass;
+            const steinerTerm = offset.lengthSquared * mass;
             totalInertia += colliderInertia + steinerTerm;
         }
 
-        this.inverseInertia = totalInertia > 0 ? 1 / totalInertia : 0;
+        this._inverseInertia = totalInertia > 0 ? 1 / totalInertia : 0;
     }
 
-    getInverseMass(): number {
-        return this.inverseMass;
+    get inverseMass(): number {
+        return this._inverseMass;
     }
-
-    setMass(mass: number): void {
-        this.inverseMass = 1 / mass;
+    set inverseMass(inverseMass: number) {
+        this._inverseMass = inverseMass;
         this.calculateInertia();
     }
 
-    getInverseInertia(): number {
-        return this.inverseInertia;
+    get mass(): number {
+        return 1 / this._inverseMass;
+    }
+    set mass(mass: number) {
+        this.inverseMass = 1 / mass;
     }
 
-    setFixedRotation(fixed: boolean): void {
-        this.fixedRotation = fixed;
+    get inverseInertia(): number {
+        return this._inverseInertia;
+    }
+
+    get fixedRotation(): boolean {
+        return this._fixedRotation;
+    }
+    set fixedRotation(fixed: boolean) {
+        this._fixedRotation = fixed;
         this.calculateInertia();
     }
 
     getVelocityAtPoint(point: Vector2): Vector2 {
-        return this.velocity.clone().add(point.clone().sub(this.position).perp().mult(this.angularVelocity));
+        return Vector2.add(this.velocity, Vector2.sub(point, this.position).perp().mult(this.angularVelocity));
     }
 
     applyImpulse(impulse: Vector2, applicationPoint = this.position): void {
-        if (this.inverseMass === 0) return;
-        this.velocity.add(impulse.clone().mult(this.inverseMass));
-        const leverArm = applicationPoint.clone().sub(this.position);
+        if (this._inverseMass === 0) return;
+        this.velocity.add(Vector2.mult(impulse, this._inverseMass));
+        const leverArm = Vector2.sub(applicationPoint, this.position);
         const torque = leverArm.cross(impulse);
-        this.angularVelocity += torque * this.inverseInertia;
+        this.angularVelocity += torque * this._inverseInertia;
     }
 
     static getEffectiveMass(body1: Body, body2: Body, contactPoint: Vector2, normal: Vector2): number {
-        const lever1 = contactPoint.clone().sub(body1.position).cross(normal);
-        const lever2 = contactPoint.clone().sub(body2.position).cross(normal);
+        const lever1 = Vector2.sub(contactPoint, body1.position).cross(normal);
+        const lever2 = Vector2.sub(contactPoint, body2.position).cross(normal);
         return 1 / (
-            body1.inverseMass +
-            body2.inverseMass +
-            body1.inverseInertia * lever1 ** 2 +
-            body2.inverseInertia * lever2 ** 2
+            body1._inverseMass +
+            body2._inverseMass +
+            body1._inverseInertia * lever1 ** 2 +
+            body2._inverseInertia * lever2 ** 2
         );
     }
 }

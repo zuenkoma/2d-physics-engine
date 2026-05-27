@@ -1,4 +1,5 @@
 import AABB from '../aabb.ts';
+import Edge from '../edge.ts';
 import Vector2 from '../vector2.ts';
 import Collider from './collider.ts';
 
@@ -7,14 +8,14 @@ export default class CapsuleCollider extends Collider {
     radius: number;
     rotation: number;
 
-    constructor(height: number, radius: number, offset = new Vector2(0, 0), rotation = 0) {
+    constructor(height: number, radius: number, offset?: Vector2, rotation = 0) {
         super(offset);
         this.height = height;
         this.radius = radius;
         this.rotation = rotation;
     }
 
-    getEndpoints(): [Vector2, Vector2] {
+    getEndpoints(): Edge {
         const halfHeight = new Vector2(0, 1).rotate(this.rotation).mult(this.height / 2 - this.radius);
         const start = halfHeight.clone().add(this.offset);
         const end = halfHeight.clone().mult(-1).add(this.offset);
@@ -22,11 +23,11 @@ export default class CapsuleCollider extends Collider {
             start.rotate(this.body.rotation).add(this.body.position);
             end.rotate(this.body.rotation).add(this.body.position);
         }
-        return [start, end];
+        return new Edge(start, end);
     }
 
     getAABB(): AABB {
-        const [start, end] = this.getEndpoints();
+        const { start, end } = this.getEndpoints();
         const radius = new Vector2(this.radius, this.radius);
         const min = new Vector2(Math.min(start.x, end.x), Math.min(start.y, end.y));
         const max = new Vector2(Math.max(start.x, end.x), Math.max(start.y, end.y));
@@ -34,26 +35,25 @@ export default class CapsuleCollider extends Collider {
     }
 
     getFurthestPoint(direction: Vector2): Vector2 {
-        const [start, end] = this.getEndpoints();
+        const { start, end } = this.getEndpoints();
         const dotStart = start.dot(direction);
         const dotEnd = end.dot(direction);
         const basePoint = dotEnd > dotStart ? end : start;
-        return basePoint.clone().add(direction.clone().normalize().mult(this.radius));
+        return Vector2.add(basePoint, Vector2.normalize(direction).mult(this.radius));
     }
 
-    getClosestEdge(direction: Vector2): [Vector2, Vector2] {
-        const [start, end] = this.getEndpoints();
-        const perp = end.clone().sub(start).perp().normalize();
+    getClosestEdge(direction: Vector2): Edge {
+        const { start, end } = this.getEndpoints();
+        const perp = Vector2.sub(end, start).perp().normalize();
         if (Math.abs(perp.cross(direction)) < 1e-6) {
-            const offset = perp.mult(Math.sign(-perp.dot(direction)) * this.radius);
-            return [start.add(offset), end.add(offset)];
+            const sign = Math.sign(perp.dot(direction));
+            const offset = Vector2.mult(perp, sign * this.radius);
+            const p1 = Vector2.sub(start, offset);
+            const p2 = Vector2.sub(end, offset);
+            return sign > 0 ? new Edge(p1, p2) : new Edge(p2, p1);
         }
-        const point = this.getFurthestPoint(direction.clone().mult(-1));
-        const perp2 = point.clone().sub(direction.dot(start) > direction.dot(end) ? start : end).perp().normalize().mult(1e-6);
-        return [
-            point.clone().sub(perp2),
-            point.clone().add(perp2)
-        ];
+        const point = this.getFurthestPoint(Vector2.mult(direction, -1));
+        return new Edge(point, point);
     }
 
     calculateInertia(mass: number): number {
